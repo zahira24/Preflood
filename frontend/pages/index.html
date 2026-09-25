@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d16">
+  <meta name="description" content="PreFlood flood early-warning, evacuation, shelter, rescue, and responder coordination platform">
+  <title>PreFlood | Predict. Warn. Evacuate. Stay Safe.</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="dark-theme">
+  <a class="skip-link" href="#main" data-i18n="skip_to_content">Skip to main content</a>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <main id="main">
+    <!-- Auth Section -->
+    <section id="auth-view" class="auth-layout">
+      <div class="auth-hero">
+        <div class="brand-mark"><span class="brand-icon">⌁</span> PreFlood</div>
+        <div class="hero-center">
+          <p class="eyebrow" data-i18n="hero_eyebrow">FLOOD EARLY-WARNING + RESCUE COORDINATION</p>
+          <h1 data-i18n="hero_title">Know earlier.<br><em>Move safer.</em></h1>
+          <p class="hero-copy" data-i18n="hero_copy">An emergency-tech platform designed for rapid warnings, safe evacuation routes, shelter capacity tracking, and responder coordination.</p>
+          <div class="tagline" data-i18n="hero_tagline">Predict. Warn. Evacuate. Stay Safe.</div>
+        </div>
+        <div class="hero-points"><span data-i18n="hero_p1">01 Real-Time Risk Signals</span> <span data-i18n="hero_p2">02 Smart Shelters</span> <span data-i18n="hero_p3">03 Direct Responder Escalation</span></div>
+      </div>
+      <div class="auth-card-wrap">
+        <div class="auth-card">
+          <div class="auth-tabs"><button class="tab active" data-auth-tab="login" data-i18n="log_in">Log in</button><button class="tab" data-auth-tab="register" data-i18n="create_account">Create account</button></div>
+          <div id="auth-message" class="form-message" role="alert"></div>
+          <form id="login-form" class="auth-form">
+            <h2 data-i18n="welcome_back">Welcome back</h2><p class="muted" data-i18n="login_sub">Access your emergency safety dashboard.</p>
+            <label><span data-i18n="continue_as">CONTINUE AS</span></label>
+            <div class="role-selector-grid" id="login-role-selector">
+              <button type="button" class="role-btn active" data-role="user"><span class="role-icon">👤</span> <span data-i18n="role_user">PUBLIC USER</span></button>
+              <button type="button" class="role-btn" data-role="responder"><span class="role-icon">🚑</span> <span data-i18n="role_responder">RESCUE TEAM</span></button>
+              <button type="button" class="role-btn" data-role="admin"><span class="role-icon">🏛️</span> <span data-i18n="role_admin">GOVERNMENT / ADMIN</span></button>
+            </div>
+            <label><span data-i18n="email_label">Email</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+            <label><span data-i18n="password_label">Password</span><input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+            <button class="button primary wide" type="submit"><span data-i18n="enter_dashboard">Enter dashboard</span> <span>→</span></button>
+          </form>
+          <form id="register-form" class="auth-form hidden">
+            <h2 data-i18n="register_title">Set up safety profile</h2><p class="muted" data-i18n="register_sub">Help responders find and assist you in an emergency.</p>
+            <label><span data-i18n="name_label">Name</span><input name="name" autocomplete="name" required minlength="2" placeholder="Your full name"></label>
+            <label><span data-i18n="email_label">Email</span><input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+            <label><span data-i18n="password_label">Password</span><input name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="8+ characters"></label>
+            <label><span data-i18n="language_label">Preferred language</span><select name="language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="ta">தமிழ் (Tamil)</option><option value="hi">हिन्दी (Hindi)</option></select></label>
+            <button class="button primary wide" type="submit"><span data-i18n="create_profile">Create profile</span> <span>→</span></button>
+          </form>
+          <p class="small-note" data-i18n="auth_note">PreFlood is an emergency coordination aid. Always prioritize local official emergency instructions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main App Section -->
+    <section id="app-view" class="app-shell hidden">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="brand-mark"><span class="brand-icon">⌁</span> PreFlood</div>
+          <span class="app-tagline" data-i18n="app_tagline">EARLY WARNING & SAFETY SYSTEM</span>
+        </div>
+        <div class="status-cluster">
+          <select id="global-lang-select" class="lang-select-topbar" aria-label="Select Language">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+          </select>
+          <button id="header-help-button" class="button help-pulse-btn compact"><span class="pulse-dot"></span> <span data-i18n="i_need_help">I NEED HELP</span></button>
+          <span id="network-status" class="network online" data-i18n="online">● Online</span>
+          <span id="role-badge" class="role-badge">USER</span>
+          <span id="user-name" class="user-badge"></span>
+          <button id="logout-button" class="text-button" data-i18n="log_out">Log out</button>
+        </div>
+      </header>
+
+      <div class="app-body">
+        <aside class="sidebar" aria-label="Main navigation">
+          <p class="sidebar-label" data-i18n="sidebar_monitoring">SAFETY MONITORING</p>
+          <button class="nav-item active" data-section="overview"><span class="nav-icon">◈</span> <span data-i18n="overview_risk">Overview & Risk</span></button>
+          <button class="nav-item" data-section="shelters"><span class="nav-icon">⌂</span> <span data-i18n="smart_shelters">Smart Shelters</span></button>
+          <button class="nav-item" data-section="evacuation"><span class="nav-icon">↗</span> <span data-i18n="evacuation_plan">Evacuation Plan</span></button>
+          <button class="nav-item" data-section="profile"><span class="nav-icon">◌</span> <span data-i18n="safety_profile">Safety Profile</span></button>
+          <button id="responder-nav" class="nav-item hidden" data-section="responder"><span class="nav-icon">✦</span> <span data-i18n="responder_desk">Responder Desk</span></button>
+          <button id="admin-nav" class="nav-item hidden" data-section="admin"><span class="nav-icon">⚙</span> <span data-i18n="admin_desk">Government Admin</span></button>
+          
+          <div class="sidebar-bottom">
+            <p class="sidebar-label" data-i18n="sidebar_assistance">EMERGENCY ASSISTANCE</p>
+            <p data-i18n="sidebar_emergency_note">If you are in immediate life safety danger, call local emergency services immediately.</p>
+            <button id="offline-info" class="text-button" data-i18n="offline_protocols">Offline safety protocols →</button>
+          </div>
+        </aside>
+
+        <div class="content-wrap">
+          <!-- Overview Section (PUBLIC / USER) -->
+          <section id="section-overview" class="page-section">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow" data-i18n="live_safety_picture">LIVE SAFETY PICTURE</p>
+                <h2><span data-i18n="greeting_prefix">Good to see you,</span> <span id="heading-name">friend</span>.</h2>
+                <p class="muted" data-i18n="greeting_sub">Real-time risk signals and emergency actions tailored to your region.</p>
+              </div>
+              <div class="heading-right">
+                <span id="last-updated" class="updated">Updating…</span>
+              </div>
+            </div>
+
+            <div id="alert-strip" class="alert-strip hidden"></div>
+
+            <!-- LIVE USER RESCUE STATUS TRACKER CARD (When active rescue exists) -->
+            <div id="my-rescue-status-container" class="hidden"></div>
+
+            <!-- PROMINENT HERO EMERGENCY ACTION CLUSTER -->
+            <div class="hero-emergency-bar">
+              <div class="hero-emergency-content">
+                <p class="eyebrow-bright" data-i18n="immediate_action">IMMEDIATE EMERGENCY ACTION</p>
+                <h3 data-i18n="immediate_rescue_q">Need immediate rescue or assistance?</h3>
+                <p class="muted-bright" data-i18n="immediate_rescue_sub">Request priority assistance directly to the responder desk with your headcount and GPS location.</p>
+              </div>
+              <div class="hero-emergency-actions">
+                <button id="hero-help-button" class="button hero-help-btn pulse-glow">
+                  <span class="btn-icon">🚨</span> <strong data-i18n="i_need_help">I NEED HELP</strong> <small data-i18n="request_rescue_sm">Request Immediate Rescue</small>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Grid Trio -->
+            <div class="action-grid">
+              <button id="warning-button" class="action-card warning">
+                <span class="action-icon">⚠</span>
+                <span><strong data-i18n="emergency_warning">Emergency Warning</strong><small data-i18n="warning_sub">Protocol & guidelines</small></span>
+                <b>→</b>
+              </button>
+              <button id="time-button" class="action-card time">
+                <span class="action-icon">⏱</span>
+                <span><strong data-i18n="get_time">GET TIME</strong><small data-i18n="get_time_sub">3-minute safety deadline</small></span>
+                <b>→</b>
+              </button>
+              <button id="evacuate-button" class="action-card evacuate">
+                <span class="action-icon">↗</span>
+                <span><strong data-i18n="start_evacuation">START EVACUATION</strong><small data-i18n="evacuation_sub">Find safe, open shelter</small></span>
+                <b>→</b>
+              </button>
+            </div>
+
+            <!-- Risk Status Card -->
+            <div class="risk-card" id="risk-card">
+              <div class="risk-top">
+                <div>
+                  <p class="eyebrow" data-i18n="risk_eyebrow">YOUR AREA · RISK SIGNAL</p>
+                  <h3 id="risk-level">INSUFFICIENT DATA</h3>
+                </div>
+                <div class="score-badge-wrap">
+                  <div id="risk-score" class="risk-score">—</div>
+                  <span class="score-label" data-i18n="risk_index">RISK INDEX</span>
+                </div>
+              </div>
+              <div class="risk-bar"><span id="risk-bar-fill"></span></div>
+              <p id="risk-copy" class="risk-copy">Weather observations are loading…</p>
+              <div id="risk-factors" class="factor-list"></div>
+            </div>
+
+            <!-- Visual Weather Observation Cluster -->
+            <div class="weather-dashboard-panel panel" style="margin-top: 1rem;">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow" data-i18n="weather_eyebrow">LIVE WEATHER STATION OBSERVATION</p>
+                  <h3 data-i18n="weather_title">Weather & Rainfall Readings</h3>
+                </div>
+                <span id="weather-timestamp-badge" class="tag info-tag" data-i18n="station_data">Station Data</span>
+              </div>
+              <div id="weather-grid" class="weather-grid"></div>
+            </div>
+
+            <!-- Interactive Map Panel -->
+            <div class="panel map-panel" style="margin-top: 1rem;">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow" data-i18n="spatial_radar">SPATIAL SAFETY RADAR</p>
+                  <h3 data-i18n="shelters_map_title">Nearby Shelters & Risk Map</h3>
+                </div>
+                <span class="muted-sm" data-i18n="live_map_view">Live map view</span>
+              </div>
+              <div id="overview-map" class="embedded-map"></div>
+            </div>
+
+            <!-- Two-Column Overview Bottom -->
+            <div class="two-column" style="margin-top: 1rem;">
+              <div class="panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow" data-i18n="nearest_facilities">NEAREST FACILITIES</p>
+                    <h3 data-i18n="available_shelters">Available Shelters</h3>
+                  </div>
+                  <button class="text-button" data-section-link="shelters" data-i18n="view_all_shelters">View all shelters →</button>
+                </div>
+                <div id="shelter-preview" class="shelter-list"></div>
+              </div>
+              <div class="panel checkin-panel">
+                <p class="eyebrow" data-i18n="accountability_status">ACCOUNTABILITY & STATUS</p>
+                <h3 data-i18n="safe_prompt">Let responders know you are safe.</h3>
+                <p class="muted" data-i18n="safe_sub">Confirm your safety status or trigger rescue escalation if you are trapped.</p>
+                <div class="accountability-actions">
+                  <button id="safe-button" class="button safe wide" data-i18n="i_am_safe">✓ I AM SAFE</button>
+                  <button id="help-button" class="button help-secondary wide" data-i18n="i_need_help">🚨 I NEED HELP</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Shelters Section -->
+          <section id="section-shelters" class="page-section hidden">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow" data-i18n="shelter_network">SMART SHELTER NETWORK</p>
+                <h2 data-i18n="choose_safe_place">Choose a safe place.</h2>
+                <p class="muted" data-i18n="shelters_sub">Real-time availability and capacity tracking. Check in upon arrival.</p>
+              </div>
+            </div>
+            <div id="shelter-list" class="shelter-grid"></div>
+          </section>
+
+          <!-- Evacuation Section -->
+          <section id="section-evacuation" class="page-section hidden">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow" data-i18n="evacuation_lifecycle">EVACUATION LIFECYCLE</p>
+                <h2 data-i18n="move_clear_timeline">Move with a clear timeline.</h2>
+                <p class="muted" data-i18n="evacuation_sub">Follow structured steps: set deadline, select shelter, follow safe route, confirm safety.</p>
+              </div>
+            </div>
+            
+            <!-- Step Tracker Indicator -->
+            <div class="step-tracker-bar">
+              <div class="step-item" id="step-1"><span class="step-num">1</span><span class="step-txt" data-i18n="step_1">Safety Window</span></div>
+              <div class="step-item" id="step-2"><span class="step-num">2</span><span class="step-txt" data-i18n="step_2">Select Shelter</span></div>
+              <div class="step-item" id="step-3"><span class="step-num">3</span><span class="step-txt" data-i18n="step_3">Safe Route</span></div>
+              <div class="step-item" id="step-4"><span class="step-num">4</span><span class="step-txt" data-i18n="step_4">Confirm Safe</span></div>
+            </div>
+
+            <div id="evacuation-status" class="timeline-card"></div>
+            <div id="route-panel" class="panel hidden" style="margin-top: 1rem;">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow" data-i18n="route_guidance">NAVIGATION & ROUTE GUIDANCE</p>
+                  <h3 id="route-shelter-title">Safe Evacuation Route</h3>
+                </div>
+              </div>
+              <div id="route-details"></div>
+              <div id="route-map" class="embedded-map" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <div id="checkin-history" class="panel" style="margin-top: 1rem;">
+              <p class="eyebrow" data-i18n="accountability_history">ACCOUNTABILITY HISTORY</p>
+              <h3 data-i18n="your_checkin_history">Your Check-in History</h3>
+              <p class="muted" data-i18n="no_checkins_yet">No check-ins recorded yet.</p>
+            </div>
+          </section>
+
+          <!-- Profile Section -->
+          <section id="section-profile" class="page-section hidden">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow" data-i18n="safety_profile">SAFETY PROFILE</p>
+                <h2 data-i18n="profile_title">Configure assistance needs.</h2>
+                <p class="muted" data-i18n="profile_sub">Preferences help emergency responders understand what support you and your household require.</p>
+              </div>
+            </div>
+            <form id="profile-form" class="panel profile-form">
+              <div class="form-grid">
+                <label><span data-i18n="registered_address">Home Area / Registered Address</span>
+                  <input name="home_label" placeholder="e.g. Riverside District, North Ave">
+                </label>
+                <label><span data-i18n="language_label">Preferred Language</span>
+                  <select name="language">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                  </select>
+                </label>
+              </div>
+              <div style="margin-top: 1rem;">
+                <button type="button" id="set-home-location" class="button outline" data-i18n="use_gps_address">Use current GPS for registered area</button>
+                <p id="home-location-status" class="small-note" data-i18n="gps_note">GPS requested only when button is pressed.</p>
+              </div>
+              <fieldset>
+                <legend data-i18n="vulnerability_needs">Accessibility and Vulnerability Needs</legend>
+                <div id="accessibility-options" class="check-grid"></div>
+              </fieldset>
+              <button class="button primary" type="submit" data-i18n="save_profile">Save Safety Preferences</button>
+            </form>
+          </section>
+
+          <!-- Responder Desk Section (RESCUE TEAM / RESPONDER) -->
+          <section id="section-responder" class="page-section hidden">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow" data-i18n="op_coordination">OPERATIONAL COORDINATION</p>
+                <h2 data-i18n="responder_desk">Responder Operations Desk</h2>
+                <p class="muted" data-i18n="responder_sub">Prioritize life safety, track rescue queue, and monitor shelter capacity.</p>
+              </div>
+              <div class="heading-actions">
+                <button id="create-alert-btn" class="button outline" data-i18n="broadcast_alert">Broadcast Emergency Alert</button>
+                <button id="refresh-responder" class="button outline" data-i18n="refresh_desk">Refresh Desk</button>
+              </div>
+            </div>
+            
+            <div id="responder-content"></div>
+          </section>
+
+          <!-- Government Admin Section (GOVERNMENT / ADMIN) -->
+          <section id="section-admin" class="page-section hidden">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow" data-i18n="govt_infra">GOVERNMENT INFRASTRUCTURE</p>
+                <h2 data-i18n="admin_desk">Admin Management Desk</h2>
+                <p class="muted" data-i18n="admin_sub">Full emergency overview, shelter lifecycle, capacity management, and alert dispatch.</p>
+              </div>
+              <div class="heading-actions">
+                <button id="admin-create-alert-btn" class="button outline" data-i18n="issue_alert">Issue Emergency Alert</button>
+                <button id="add-shelter-btn" class="button primary" data-i18n="add_shelter">Add New Shelter</button>
+                <button id="refresh-admin" class="button outline" data-i18n="refresh_overview">Refresh Overview</button>
+              </div>
+            </div>
+            
+            <div id="admin-content"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Reusable Modal Container -->
+  <dialog id="modal">
+    <div id="modal-content"></div>
+    <button class="modal-close" aria-label="Close dialog">×</button>
+  </dialog>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Google Maps JS API: loaded dynamically only when GOOGLE_MAPS_API_KEY is configured -->
+  <script>
+    window._gmapsLoaded = false;
+    window._gmapsCallbacks = [];
+    window.initGoogleMapsCallback = function() {
+      window._gmapsLoaded = true;
+      window._gmapsCallbacks.forEach(function(cb) { try { cb(); } catch(e) {} });
+      window._gmapsCallbacks = [];
+    };
+    function _onGmapsReady(cb) {
+      if (window._gmapsLoaded) { cb(); }
+      else { window._gmapsCallbacks.push(cb); }
+    }
+    fetch('/api/config').then(function(r){ return r.json(); }).then(function(cfg){
+      window.prefloodGoogleMapsKey = cfg.has_google_maps ? cfg.google_maps_api_key : '';
+      if (cfg.has_google_maps && cfg.google_maps_api_key) {
+        var s = document.createElement('script');
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(cfg.google_maps_api_key) + '&callback=initGoogleMapsCallback&loading=async';
+        s.async = true;
+        s.defer = true;
+        s.onerror = function() { window.prefloodGoogleMapsKey = ''; };
+        document.head.appendChild(s);
+      }
+    }).catch(function(){ window.prefloodGoogleMapsKey = ''; });
+  </script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
