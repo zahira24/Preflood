@@ -69,21 +69,6 @@ def init_db():
              generate_password_hash(admin_password), utc_now()),
         )
 
-    # Seed local development test accounts
-    now = utc_now()
-    if not db.execute("SELECT 1 FROM users WHERE email = 'responder@test.com'").fetchone():
-        db.execute(
-            """INSERT INTO users (name, email, password_hash, role, language, accessibility_json, created_at)
-            VALUES (?, ?, ?, 'responder', 'en', '[]', ?)""",
-            ("Rescue Team Responder", "responder@test.com", generate_password_hash("Test@123"), now),
-        )
-
-    if not db.execute("SELECT 1 FROM users WHERE email = 'admin@test.com'").fetchone():
-        db.execute(
-            """INSERT INTO users (name, email, password_hash, role, language, accessibility_json, created_at)
-            VALUES (?, ?, ?, 'admin', 'en', '[]', ?)""",
-            ("Government Admin", "admin@test.com", generate_password_hash("Test@123"), now),
-        )
 
     db.commit()
     db.close()
