@@ -1093,11 +1093,25 @@ async function boot() {
   $('#login-form').addEventListener('submit', (event) => submitAuth(event, 'login'));
   $('#register-form').addEventListener('submit', (event) => submitAuth(event, 'register'));
   
-  $('#logout-button').addEventListener('click', async () => {
-    await api('/auth/logout', { method: 'POST' }).catch(() => {});
-    state.user = null;
-    setView(false);
-  });
+
+$('#logout-button').addEventListener('click', async () => {
+  await api('/auth/logout', { method: 'POST' }).catch(() => {});
+
+  stopUserRescuePolling();
+
+  if (typeof stopResponderLocationTracking === 'function') {
+    stopResponderLocationTracking();
+  }
+
+  state.user = null;
+  state.myRescues = [];
+  state.checkins = [];
+
+  localStorage.removeItem('preflood_active_user_rescue');
+
+  renderMyRescueStatus();
+  setView(false);
+});
 
   $$('.nav-item').forEach((item) => item.addEventListener('click', () => showSection(item.dataset.section)));
   $$('[data-section-link]').forEach((item) => item.addEventListener('click', () => showSection(item.dataset.sectionLink)));
@@ -1136,7 +1150,6 @@ async function boot() {
   const cached = localStorage.getItem('preflood_emergency_cache');
   if (cached && !navigator.onLine) notify('Showing cached emergency information.');
 
-  loadLocalRescues();
   translateUI();
 
   try {
