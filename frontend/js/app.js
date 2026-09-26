@@ -1038,11 +1038,27 @@ async function submitAuth(event, mode) {
   const button = $('button[type="submit"]', form);
   button.disabled = true;
   showAuthMessage('Connecting…');
+
   try {
-    const data = await api(`/auth/${mode}`, { method: 'POST', body: JSON.stringify(formPayload(form)) });
+    const data = await api(`/auth/${mode}`, {
+      method: 'POST',
+      body: JSON.stringify(formPayload(form))
+    });
+
+    // Clear previous account data before switching users.
+    stopUserRescuePolling();
+    state.myRescues = [];
+    state.checkins = [];
     state.user = data.user;
-    if (state.user.language) setLanguage(state.user.language);
+
+    localStorage.removeItem('preflood_active_user_rescue');
+
+    if (state.user.language) {
+      setLanguage(state.user.language);
+    }
+
     setView(true);
+    renderMyRescueStatus();
     await loadDashboard();
   } catch (error) {
     showAuthMessage(error.message);
