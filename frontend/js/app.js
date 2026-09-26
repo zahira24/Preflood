@@ -1153,27 +1153,51 @@ async function boot() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(() => {});
 }
 
+
 async function loadDashboard() {
   try {
-    const [risk, shelterData, alerts, evacuations, checkins] = await Promise.all([
-      api('/risk/current'),
-      api('/shelters'),
-      api('/alerts'),
-      api('/evacuations'),
-      api('/checkins')
-    ]);
+    const [risk, shelterData, alerts, evacuations, checkins] =
+      await Promise.all([
+        api('/risk/current'),
+        api('/shelters'),
+        api('/alerts'),
+        api('/evacuations'),
+        api('/checkins')
+      ]);
 
     state.risk = risk.risk;
     state.shelters = shelterData.shelters;
     state.checkins = checkins.checkins;
     state.evacuation = evacuations.evacuations[0] || null;
     state.offline = false;
-    
+
     if (['admin', 'responder'].includes(state.user?.role)) {
       try {
         const rescueData = await api('/rescue');
         state.myRescues = rescueData.requests || [];
-      } catch (err) {}
+      } catch (err) {
+        state.myRescues = [];
+      }
+    } else {
+      // Load only the signed-in user's active rescue request.
+      try {
+        const rescueData = await api('/rescue/my-active');
+        state.myRescues = rescueData.request
+          ? [rescueData.request]
+          : [];
+
+        if (rescueData.request) {
+          localStorage.setItem(
+            'preflood_active_user_rescue',
+            JSON.stringify(rescueData.request)
+          );
+        } else {
+          localStorage.removeItem('preflood_active_user_rescue');
+        }
+      } catch (err) {
+        state.myRescues = [];
+        localStorage.removeItem('preflood_active_user_rescue');
+      }
     }
 
     renderRisk();
@@ -1185,19 +1209,36 @@ async function loadDashboard() {
     renderMyRescueStatus();
     initOverviewMap();
 
-    const updateTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if ($('#last-updated')) $('#last-updated').textContent = `${t('updating')} ${updateTime}`;
-    
+    const updateTime = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    if ($('#last-updated')) {
+      $('#last-updated').textContent =
+        `${t('updating')} ${updateTime}`;
+    }
+
     saveEmergencyCache();
 
     const currentRole = state.user?.role;
-    if (currentRole === 'admin' && !$('#section-admin').classList.contains('hidden')) {
+
+    if (
+      currentRole === 'admin' &&
+      !$('#section-admin').classList.contains('hidden')
+    ) {
       loadAdmin();
-    } else if (['admin', 'responder'].includes(currentRole) && !$('#section-responder').classList.contains('hidden')) {
+    } else if (
+      ['admin', 'responder'].includes(currentRole) &&
+      !$('#section-responder').classList.contains('hidden')
+    ) {
       loadResponder();
     }
   } catch (error) {
-    const cached = JSON.parse(localStorage.getItem('preflood_emergency_cache') || '{}');
+    const cached = JSON.parse(
+      localStorage.getItem('preflood_emergency_cache') || '{}'
+    );
+
     if (cached.risk) {
       state.risk = cached.risk;
       state.shelters = cached.shelters || [];
@@ -1206,10 +1247,15 @@ async function loadDashboard() {
       renderShelters();
       initOverviewMap();
     }
+
     if (error.message !== 'Authentication required') {
-      notify('Some live data is unavailable. Cached safety information is shown.', true);
+      notify(
+        'Some live data is unavailable. Cached safety information is shown.',
+        true
+      );
     }
   }
+
   setNetworkStatus();
 }
 
