@@ -1218,6 +1218,7 @@ async function loadDashboard() {
         localStorage.removeItem('preflood_active_user_rescue');
       }
     }
+    
 
     renderRisk();
     renderWeatherGrid();
