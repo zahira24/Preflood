@@ -1168,7 +1168,6 @@ $('#logout-button').addEventListener('click', async () => {
 
 
 async function loadDashboard() {
-  // Clear stale rescue data before loading the current user's data.
   if (!['admin', 'responder'].includes(state.user?.role)) {
     state.myRescues = [];
     localStorage.removeItem('preflood_active_user_rescue');
