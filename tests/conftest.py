@@ -10,6 +10,14 @@ from werkzeug.security import generate_password_hash
 @pytest.fixture()
 def app(tmp_path, monkeypatch):
     monkeypatch.setenv("PREFLOOD_DB", str(tmp_path / "test.db"))
+
+    # Test-only demo accounts
+    monkeypatch.setenv("PREFLOOD_ADMIN_EMAIL", "admin@test.com")
+    monkeypatch.setenv("PREFLOOD_ADMIN_PASSWORD", "Test@123")
+
+    monkeypatch.setenv("PREFLOOD_RESPONDER_EMAIL", "responder@test.com")
+    monkeypatch.setenv("PREFLOOD_RESPONDER_PASSWORD", "Test@123")
+
     app = create_app({"TESTING": True, "SECRET_KEY": "test-secret"})
     yield app
 
