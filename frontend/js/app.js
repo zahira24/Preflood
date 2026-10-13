@@ -2472,8 +2472,8 @@ function initOverviewMap() {
   const container = $('#overview-map');
   if (!container) return;
 
-  const centerLat = state.coords?.lat || 40.715;
-  const centerLng = state.coords?.lng || -74.005;
+const centerLat = state.coords?.lat ?? 20.5937;
+const centerLng = state.coords?.lng ?? 78.9629;
 
   // ── Google Maps path ──────────────────────────────────────────────────────
   const hasGoogleKey = typeof window.prefloodGoogleMapsKey === 'string' && window.prefloodGoogleMapsKey.length > 0;
@@ -2632,7 +2632,7 @@ function initResponderMap(requests, shelters = []) {
   if (!container || typeof L === 'undefined') return;
   if (maps.responder) { maps.responder.remove(); maps.responder = null; }
 
-  const map = L.map('responder-map').setView([40.715, -74.005], 13);
+  const map = L.map('responder-map').setView([20.5937, 78.9629], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
@@ -2684,7 +2684,7 @@ function initAdminMap(shelters = [], requests = []) {
   if (!container || typeof L === 'undefined') return;
   if (maps.admin) { maps.admin.remove(); maps.admin = null; }
 
-  const map = L.map('admin-map').setView([40.715, -74.005], 13);
+  const map = L.map('admin-map').setView([20.5937, 78.9629], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
